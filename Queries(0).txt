@@ -1,0 +1,153 @@
+/* >>>>>>>>> Query 1 <<<<<<<<< */
+
+SELECT STRFTIME('%Y', inv.InvoiceDate) year_,
+
+       SUM(inv.Total) total,
+
+       g.Name,
+
+       inv.BillingCountry
+
+FROM Genre g
+
+JOIN Track tr ON g.GenreId = tr.GenreId
+
+JOIN InvoiceLine invl ON invl.TrackId = tr.TrackId
+
+JOIN Invoice inv ON inv.InvoiceId = invl.InvoiceId
+
+WHERE g.Name ='Rock'
+
+  AND BillingCountry='USA'
+
+GROUP BY 1
+
+
+
+
+/* >>>>>>>>> Query 2 <<<<<<<<< */
+
+WITH tab AS
+
+  (
+
+SELECT art.Name artist_name,
+
+       pl.Name play_list_name
+
+   FROM Artist art
+
+   JOIN Album alb ON art.ArtistId = alb.ArtistId
+
+   JOIN Track tr ON alb.AlbumId = tr.AlbumId
+
+   JOIN PlayListTrack plt ON tr.TrackId = plt.TrackId
+
+   JOIN PlayList pl ON plt.PlayListId = pl.PlayListId
+
+   WHERE play_list_name = 'TV Shows'
+
+)
+
+SELECT artist_name,
+
+             Count(play_list_name) play_list_name_count
+
+FROM tab
+
+GROUP BY 1
+
+ORDER BY 2 DESC
+
+
+
+/* >>>>>>>>> Query 3 <<<<<<<<< */
+
+WITH tab AS
+
+  (
+
+SELECT art.Name artist_name,
+
+       SUM(invl.UnitPrice*invl.Quantity) amount_spent,
+
+       g.Name
+
+   FROM Artist art
+
+   JOIN Album al ON art.ArtistId = al.ArtistId
+
+   JOIN Track tr ON tr.AlbumId = al.AlbumId
+
+   JOIN Genre g ON tr.GenreId = g.GenreId
+
+   JOIN InvoiceLine invl ON invl.TrackId = tr.TrackId
+
+   GROUP BY 1
+
+   ORDER BY 2 DESC
+
+)
+
+SELECT Name,
+
+             count(artist_name) count_
+
+FROM tab
+
+GROUP BY 1
+
+ORDER BY 2 DESC
+
+LIMIT 10
+
+
+
+
+/* >>>>>>>>> Query 4 <<<<<<<<< */
+
+SELECT alb.Title album,
+
+       inv.BillingCountry,
+
+       SUM (inv.Total) invoices
+
+FROM Album alb
+
+JOIN track tr ON alb.AlbumId = tr.AlbumId
+
+JOIN InvoiceLine invl ON tr.TrackId = invl.TrackId
+
+JOIN invoice inv ON invl.InvoiceId = inv.InvoiceId
+
+WHERE BillingCountry =
+
+    (
+
+     SELECT billingCountry
+
+     FROM
+
+       (
+
+       SELECT BillingCountry,
+
+               Count(1)
+
+        FROM Invoice
+
+        GROUP BY 1
+
+        ORDER BY 2 DESC
+
+        LIMIT 1
+
+       )
+
+)
+
+GROUP BY 1
+
+ORDER BY 3 DESC
+
+LIMIT 10
